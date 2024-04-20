@@ -35,4 +35,3 @@ class Piece (pygame.sprite.Sprite):
             return True
         else:
             return False
-    

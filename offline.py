@@ -45,19 +45,13 @@ def black_castle(square):
                 break
 
 
-
-
 def offline_game():
     global running, pieceClicked, clickedPiece, clickedSquare
     reset_button = Button.Button('Reset', 900, 100,
-                                 100, 50, font, screen, board)
+                                 100, 50, font, screen,
+                                 lambda: [board.reset(), make_all_pieces()])
     legal_moves_lst = []
     while running:
-        outcome = board.outcome()
-        if outcome is not None:
-            print(outcome)
-            board.reset()
-            make_all_pieces()
 
         # Process events
         for event in pygame.event.get():
@@ -65,12 +59,15 @@ def offline_game():
                 running = False
                 break
 
+            if reset_button.check_clicked():
+                reset_button.run_function()
+
             if event.type == pygame.MOUSEBUTTONDOWN:
                 clickPos = event.pos
                 square = common.ident_square(clickPos[0], clickPos[1])
                 legal_moves_lst = []
 
-                if pieceClicked and square != clickedSquare:
+                if square is not None and pieceClicked and square != clickedSquare:
                     pieceClicked = False
                     if clickedPiece.move_to(square):
                         if 'w_king' == clickedPiece.name \
@@ -84,7 +81,7 @@ def offline_game():
                                 piece.kill()
                                 break
                 else:
-                    print(square)
+                    # print(square)
                     for piece in allPieces:
                         if piece.rect.collidepoint(clickPos[0], clickPos[1]):
                             legal_moves_lst = list(filter(lambda x: square in x, [
@@ -95,18 +92,37 @@ def offline_game():
                             for i in range(len(legal_moves_lst)):
                                 legal_moves_lst[i] = legal_moves_lst[i][2:]
 
-                            print(legal_moves_lst)
-                            print(f'{piece.name=}')
+                            # print(legal_moves_lst)
+                            # print(f'{piece.name=}')
                             pieceClicked = True
                             clickedPiece = piece
                             clickedSquare = square
                             break
 
         common.draw_board()
-        Piece.allPieces.draw(constants.screen)
+        allPieces.draw(constants.screen)
         for legal_square in legal_moves_lst:
             pygame.draw.circle(screen, 'white', get_coords(legal_square), 40)
         reset_button.draw()
 
+        outcome = board.outcome()
+        if outcome is not None:
+            # print(board.result())
+            pygame.draw.rect(screen, 'white', pygame.Rect(295, 490, 400, 75))
+            if board.result() == '1-0':
+                white_win = win_font.render('White Wins', True, 'black')
+                screen.blit(white_win, [300, 500])
+            elif board.result() == '0-1':
+                black_win = win_font.render('Black Wins', True, 'black')
+                screen.blit(black_win, [300, 500])
+            else:
+                draw = win_font.render('Draw', True, 'black')
+                screen.blit(draw, [300, 500])
+
         pygame.display.flip()
         clock.tick(20)
+
+
+if __name__ == '__main__':
+    offline_game()
+    pygame.quit()

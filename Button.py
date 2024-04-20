@@ -3,8 +3,8 @@ from constants import *
 
 
 class Button:
-    def __init__(self, text, x_pos, y_pos, width, height, font,
-                 _screen, _board=None):
+    def __init__(self, text, x_pos, y_pos, width, height, _font,
+                 _screen, _function=None):
         self.text = text
         self.x = x_pos
         self.y = y_pos
@@ -13,7 +13,7 @@ class Button:
         self.font = font
         self.screen = _screen
         self.draw()
-        self.board = _board
+        self.function = _function
 
     def draw(self):
         text = self.font.render(self.text, True, BLACK)
@@ -30,8 +30,9 @@ class Button:
         left_click = pygame.mouse.get_pressed()[0]
         button_rect = pygame.rect.Rect((self.x, self.y), (self.width, self.height))
         if left_click and button_rect.collidepoint(mouse_pos):
-            self.board.reset()
-            make_all_pieces()
             return True
         else:
             return False
+
+    def run_function(self):
+        self.function()

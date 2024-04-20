@@ -1,6 +1,7 @@
-import pygame.sprite
-
 from Piece import *
+import common
+import pygame
+import chess
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -109,3 +110,4 @@ clickedPiece = None
 clickedSquare = ''
 pygame.init()
 font = pygame.font.Font(None, 30)
+win_font = pygame.font.Font(None, 100)
