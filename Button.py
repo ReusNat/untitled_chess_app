@@ -1,6 +1,9 @@
 import pygame.rect
 from constants import *
 
+# The button class makes it easier for all the buttons in the UI work effectively.
+# The class also has the ability to store a function, but I ended up not needing that functionality
+
 
 class Button:
     def __init__(self, text, x_pos, y_pos, width, height, _font,

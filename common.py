@@ -130,4 +130,3 @@ def draw_board():
         text = constants.font.render(number, True, 'black')
         constants.screen.blit(text, [25, 850 - 100 * i])
         i += 1
-

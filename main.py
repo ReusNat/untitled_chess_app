@@ -1,6 +1,9 @@
 from offline import *
 from online import *
 
+# This is the Main Menu UI that allows you to either play Online or offline
+# I don't know if it is necessary for me to have this, but it's here regardless
+
 title_txt = 'Untitled Chess App'
 button_font = pygame.font.Font(None, 50)
 title_font = pygame.font.Font(None, 100)
@@ -22,10 +25,7 @@ while running:
         offline_game()
 
     if online_button.check_clicked():
-        try:
-            online_game()
-        except:
-            pass
+        online_game()
 
     offline_button.draw()
     online_button.draw()

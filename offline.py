@@ -81,7 +81,6 @@ def offline_game():
                                 piece.kill()
                                 break
                 else:
-                    # print(square)
                     for piece in allPieces:
                         if piece.rect.collidepoint(clickPos[0], clickPos[1]):
                             legal_moves_lst = list(filter(lambda x: square in x, [
@@ -92,8 +91,6 @@ def offline_game():
                             for i in range(len(legal_moves_lst)):
                                 legal_moves_lst[i] = legal_moves_lst[i][2:]
 
-                            # print(legal_moves_lst)
-                            # print(f'{piece.name=}')
                             pieceClicked = True
                             clickedPiece = piece
                             clickedSquare = square
@@ -107,7 +104,6 @@ def offline_game():
 
         outcome = board.outcome()
         if outcome is not None:
-            # print(board.result())
             pygame.draw.rect(screen, 'white', pygame.Rect(295, 490, 400, 75))
             if board.result() == '1-0':
                 white_win = win_font.render('White Wins', True, 'black')

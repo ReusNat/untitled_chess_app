@@ -1,17 +1,16 @@
 import threading
+import _queue
 from queue import Queue
 from socket import *
 from constants import *
 from common import *
 
-color = ''
-isTurn = False
-msg_queue = Queue()
-serverMsg = ''
+# Welcome to the online.py file, like the name suggests this file communicates with the server
+# This file has a lot of nifty things going on
 
 
-def get_message(conn):
-    msg = conn.recv(5).decode().rstrip()
+def get_message(conn):  # This function and the 2 following functions handle getting input from the server, which might
+    msg = conn.recv(5).decode().rstrip()  # take some time, so these functions keep it on a separate thread
     msg_queue.put(msg)
 
 
@@ -21,7 +20,7 @@ def listen():
         try:
             res = msg_queue.get(block=False)
             break
-        except:
+        except _queue.Empty:
             import time
             time.sleep(0.1)
             pass
@@ -34,7 +33,7 @@ def handle_listen(conn):
     listen()
 
 
-def get_line(conn):
+def get_line(conn):  # same get_line function as before, get input until \n or nothing else is there
     msg = b''
     while True:
         ch = conn.recv(1)
@@ -86,19 +85,31 @@ def black_castle(square):
                 break
 
 
-def online_game():
-    global color, isTurn, serverMsg
+color = ''
+isTurn = False
+msg_queue = Queue()
+serverMsg = ''
+
+
+def online_game():  # This function handles everything that the offline_game function does as well as communicating
+    global color, isTurn, serverMsg  # with the server
     isTurn = False
 
     try:
+        with open('config.txt', 'r') as f:
+            ip = f.readline().split(':')[1].rstrip()
+            port = int(f.readline().split(':')[1])
+            f.close()
         clientSock = socket(AF_INET, SOCK_STREAM)
-        clientSock.connect(('127.0.0.1', 8086))
+        clientSock.connect((ip, port))
     except ConnectionRefusedError:
         print('Connection refused')
         exit(1)
+    except ValueError:
+        print('Invalid port or IP address')
+        print('Make sure format of config.txt is correct:\nIP:127.0.0.1\nPort:8085\n')
+        exit(1)
 
-    # print(f'client connected {clientSock}')
-    # color = get_line(clientSock).rstrip()
     color = clientSock.recv(2).decode().rstrip()
     if 'w' in color:
         isTurn = True
@@ -109,14 +120,10 @@ def online_game():
     legal_moves_lst = []
     while running and connected:
         if not isTurn:
-            # print('Not your turn, waiting for move')
-            # serverMsg = get_line(clientSock).rstrip()
-            # serverMsg = clientSock.recv(5).decode().rstrip()
             handle_listen(clientSock)
             if serverMsg == '':
                 continue
 
-            # print(f'{serverMsg=}')
             if 'disc' in serverMsg:
                 connected = False
             else:
@@ -126,9 +133,9 @@ def online_game():
                         piece.move_to(serverMsg[2:4])
 
                         if piece.name == 'w_king' and (serverMsg[2:4] == 'g1' or serverMsg[2:4] == 'c1'):
-                            white_castle(piece)
+                            white_castle(serverMsg[2:4])
                         elif piece.name == 'b_king' and (serverMsg[2:4] == 'g8' or serverMsg[2:4] == 'c8'):
-                            black_castle(piece)
+                            black_castle(serverMsg[2:4])
 
                         for _piece in allPieces:
                             _pieceSquare = common.ident_square(_piece.rect.x, _piece.rect.y)
@@ -146,7 +153,6 @@ def online_game():
                 clientSock.close()
                 break
 
-            # print(f'{isTurn=}')
             if event.type == pygame.MOUSEBUTTONDOWN and isTurn:
                 clickPos = event.pos
                 square = common.ident_square(clickPos[0], clickPos[1])
@@ -155,11 +161,10 @@ def online_game():
                 if pieceClicked and square != clickedSquare:
                     pieceClicked = False
                     clientSock.send((clickedSquare+square+'\n').encode())
-                    # if get_line(clientSock).rstrip() != '1':
                     if clientSock.recv(2).decode().rstrip() != '1':
                         print('bad move')
-                    else:
-                        print('good move')
+                        isTurn = True
+                        break
 
                     if clickedPiece.move_to(square):
                         if 'w_king' == clickedPiece.name \
@@ -175,7 +180,6 @@ def online_game():
                                 break
                         isTurn = False
                 else:
-                    # print(square)
                     for piece in allPieces:
                         if (piece.rect.collidepoint(clickPos[0], clickPos[1])
                                 and piece.color == color):
@@ -187,8 +191,6 @@ def online_game():
                             for i in range(len(legal_moves_lst)):
                                 legal_moves_lst[i] = legal_moves_lst[i][2:]
 
-                            # print(legal_moves_lst)
-                            # print(f'{piece.name=}')
                             pieceClicked = True
                             clickedPiece = piece
                             clickedSquare = square
@@ -204,7 +206,6 @@ def online_game():
 
         outcome = board.outcome()
         if outcome is not None:
-            # print(board.result())
             pygame.draw.rect(screen, 'white', pygame.Rect(295, 490, 400, 75))
             if board.result() == '1-0':
                 white_win = win_font.render('White Wins', True, 'black')
@@ -220,6 +221,6 @@ def online_game():
         clock.tick(20)
 
 
-if __name__ == '__main__':
-    online_game()
+if __name__ == '__main__':  # I wanted the ability to run this file standalone for testing,
+    online_game()           # left it in so users could decide how they want to interact with my code.
     pygame.quit()
