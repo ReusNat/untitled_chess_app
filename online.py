@@ -111,6 +111,7 @@ def online_game():  # This function handles everything that the offline_game fun
         exit(1)
 
     color = clientSock.recv(2).decode().rstrip()
+    print(f'{color=}')
     if 'w' in color:
         isTurn = True
 
@@ -129,9 +130,7 @@ def online_game():  # This function handles everything that the offline_game fun
             else:
                 for piece in allPieces:
                     pieceSquare = common.ident_square(piece.rect.x, piece.rect.y)
-                    if pieceSquare == serverMsg[0:2]:
-                        piece.move_to(serverMsg[2:4])
-
+                    if pieceSquare == serverMsg[0:2] and piece.move_to(serverMsg[2:4]):
                         if piece.name == 'w_king' and (serverMsg[2:4] == 'g1' or serverMsg[2:4] == 'c1'):
                             white_castle(serverMsg[2:4])
                         elif piece.name == 'b_king' and (serverMsg[2:4] == 'g8' or serverMsg[2:4] == 'c8'):
@@ -156,11 +155,12 @@ def online_game():  # This function handles everything that the offline_game fun
             if event.type == pygame.MOUSEBUTTONDOWN and isTurn:
                 clickPos = event.pos
                 square = common.ident_square(clickPos[0], clickPos[1])
+
                 legal_moves_lst = []
 
-                if pieceClicked and square != clickedSquare:
+                if square is not None and pieceClicked and square != clickedSquare:
                     pieceClicked = False
-                    clientSock.send((clickedSquare+square+'\n').encode())
+                    clientSock.send((clickedSquare + square+'\n').encode())
                     if clientSock.recv(2).decode().rstrip() != '1':
                         print('bad move')
                         isTurn = True

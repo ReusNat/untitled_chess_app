@@ -37,7 +37,7 @@ SOCK_NAME = f'{serverSock.getsockname()[0]}:{serverSock.getsockname()[1]}'
 
 print(f'Server running on: {SOCK_NAME}')
 
-connectedUsers = []
+connectedUsers: list[tuple[socket, str]] = []
 
 
 def handle_client(connInfo):  # Function called by each thread to handle communicating to each client on its own thread
@@ -46,21 +46,23 @@ def handle_client(connInfo):  # Function called by each thread to handle communi
     print(f'connection from {clientAddr}')
     white = True
 
-    if not connectedUsers:  # check to see if the connected users list is empty, if so then the connected user is white
-        connectedUsers.append((clientConn, clientAddr))
+    if not connectedUsers:
         clientConn.send('w\n'.encode())
     else:
         white = False
-        connectedUsers.append((clientConn, clientAddr))
         clientConn.send('b\n'.encode())
 
+    connectedUsers.append((clientConn, clientAddr))
+
     while True:  # This loop just keeps the hand off going until the end of the game or until one client disconnects
-        message = get_line(connInfo[0]).rstrip()
+        message = clientConn.recv(5).decode().rstrip()
         print(f'{message=}')
         if 'exit' in message:
             if white:
+                connectedUsers[1][0].send('disc\n'.encode())
                 connectedUsers.pop(0)
             else:
+                connectedUsers[0][0].send('disc\n'.encode())
                 connectedUsers.pop(1)
             break
 
@@ -91,6 +93,7 @@ while running:  # This while true keeps running waiting for users to connect and
                          daemon=True).start()
     except KeyboardInterrupt:
         print("\n[Shutting Down]")
-        for user in connectedUsers:
-            user[0].send('disc\n'.encode())
+        if connectedUsers:
+            for user in connectedUsers:
+                user[0].send('disc\n'.encode())
         running = False
